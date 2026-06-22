@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LevelUp — Seu Planner Gamificado</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #07070D;
+    --bg-panel: #0F1118;
+    --bg-card: #141824;
+    --bg-hover: #1A2133;
+    --blue-deep: #1E3A5F;
+    --blue-primary: #2563EB;
+    --blue-bright: #3B82F6;
+    --blue-light: #60A5FA;
+    --blue-glow: rgba(37, 99, 235, 0.25);
+    --text-primary: #E2E8F0;
+    --text-secondary: #94A3B8;
+    --text-muted: #4A5568;
+    --border: rgba(37, 99, 235, 0.15);
+    --border-bright: rgba(96, 165, 250, 0.3);
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --xp-color: #60A5FA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, var(--blue-primary), var(--blue-light));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px var(--blue-glow);
+  }
+
+  .logo-text {
+    font-size: 17px;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--text-primary), var(--blue-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.3px;
+  }
+
+  /* Player Card */
+  .player-card {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .player-avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .player-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-deep), var(--blue-primary));
+    border: 2px solid var(--blue-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .player-info { flex: 1; min-width: 0; }
+
+  .player-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-title {
+    font-size: 11px;
+    color: var(--blue-light);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+
+  .level-badge {
+    background: linear-gradient(135deg, var(--blue-primary), var(--blue-light));
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    box-shadow: 0 0 12px var(--blue-glow);
+  }
+
+  .xp-bar-container { }
+
+  .xp-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .xp-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .xp-value {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-light);
+  }
+
+  .xp-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(37, 99, 235, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-primary), var(--blue-light));
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .xp-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
+    animation: xpShimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes xpShimmer {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 6px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-chip {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+
+  .stat-chip-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .stat-chip-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 3px;
+  }
+
+  /* Sidebar Nav */
+  .sidebar-nav {
+    padding: 12px 12px;
+    flex: 1;
+  }
+
+  .nav-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 8px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+
+  .nav-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  .nav-item.active {
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--blue-light);
+    border-color: rgba(37, 99, 235, 0.25);
+  }
+
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--blue-primary);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* ===== MAIN AREA ===== */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* Top Bar */
+  .topbar {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+
+  .page-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+  }
+
+  .date-chip {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .btn-add {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--blue-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 0 20px rgba(37,99,235,0.3);
+  }
+
+  .btn-add:hover {
+    background: var(--blue-bright);
+    box-shadow: 0 0 30px rgba(37,99,235,0.5);
+    transform: translateY(-1px);
+  }
+
+  /* Content Area */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 7px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+  }
+
+  .tab:hover { color: var(--text-primary); }
+
+  .tab.active {
+    background: rgba(37,99,235,0.15);
+    color: var(--blue-light);
+    border-color: rgba(37,99,235,0.3);
+    font-weight: 600;
+  }
+
+  /* VIEW PANELS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ===== TODAY VIEW ===== */
+  .today-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+  }
+
+  /* Task Section */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-count {
+    font-size: 11px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .btn-sm {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue-light);
+    background: rgba(37,99,235,0.1);
+    border: 1px solid rgba(37,99,235,0.2);
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-sm:hover {
+    background: rgba(37,99,235,0.2);
+    border-color: rgba(37,99,235,0.4);
+  }
+
+  /* Task Cards */
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .task-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.2s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .task-card.priority-high::before { background: var(--danger); }
+  .task-card.priority-medium::before { background: var(--warning); }
+  .task-card.priority-low::before { background: var(--success); }
+
+  .task-card:hover {
+    border-color: var(--border-bright);
+    background: var(--bg-hover);
+    transform: translateX(2px);
+  }
+
+  .task-card.done {
+    opacity: 0.5;
+    border-color: var(--border);
+  }
+
+  .task-card.done .task-title { text-decoration: line-through; color: var(--text-muted); }
+
+  .task-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border-bright);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .task-check:hover { border-color: var(--blue-light); background: rgba(37,99,235,0.1); }
+  .task-check.checked { background: var(--blue-primary); border-color: var(--blue-primary); }
+  .task-check.checked::after { content: '✓'; color: white; font-size: 11px; font-weight: 800; }
+
+  .task-content { flex: 1; min-width: 0; }
+
+  .task-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+    line-height: 1.4;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .task-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .tag-work { background: rgba(37,99,235,0.15); color: var(--blue-light); border: 1px solid rgba(37,99,235,0.25); }
+  .tag-personal { background: rgba(16,185,129,0.12); color: #34D399; border: 1px solid rgba(16,185,129,0.2); }
+  .tag-health { background: rgba(245,158,11,0.12); color: #FCD34D; border: 1px solid rgba(245,158,11,0.2); }
+  .tag-study { background: rgba(139,92,246,0.12); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.2); }
+
+  .task-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .task-xp {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-light);
+    background: rgba(37,99,235,0.1);
+    border: 1px solid rgba(37,99,235,0.2);
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* Right Column */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Summary Card */
+  .summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  .summary-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+  }
+
+  /* Circular Progress */
+  .progress-circle-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .circle-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+  }
+
+  .circle-wrap svg { transform: rotate(-90deg); }
+
+  .circle-bg { fill: none; stroke: rgba(37,99,235,0.12); stroke-width: 5; }
+  .circle-fill {
+    fill: none;
+    stroke: url(#circleGrad);
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .circle-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .progress-text { flex: 1; }
+  .progress-big { font-size: 22px; font-weight: 800; color: var(--text-primary); line-height: 1; }
+  .progress-sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+  /* Day Stats */
+  .day-stats { display: flex; flex-direction: column; gap: 8px; }
+
+  .day-stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .day-stat-label { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+  .day-stat-val { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .day-stat-val.blue { color: var(--blue-light); }
+  .day-stat-val.green { color: var(--success); }
+
+  /* Goal Mini Card */
+  .goal-mini {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .goal-mini-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .goal-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .goal-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .goal-item-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .goal-item-pct {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-light);
+  }
+
+  .mini-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(37,99,235,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+
+  .fill-blue { background: linear-gradient(90deg, var(--blue-primary), var(--blue-light)); }
+  .fill-green { background: linear-gradient(90deg, #059669, #34D399); }
+  .fill-purple { background: linear-gradient(90deg, #7C3AED, #C4B5FD); }
+
+  /* Streak Card */
+  .streak-card {
+    background: linear-gradient(135deg, rgba(37,99,235,0.15) 0%, rgba(37,99,235,0.05) 100%);
+    border: 1px solid rgba(37,99,235,0.25);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .streak-icon { font-size: 28px; }
+
+  .streak-info { flex: 1; }
+  .streak-number { font-size: 24px; font-weight: 900; color: var(--text-primary); line-height: 1; }
+  .streak-label { font-size: 11px; color: var(--blue-light); font-weight: 500; margin-top: 2px; }
+
+  /* ===== GOALS VIEW ===== */
+  .goals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+  .goal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .goal-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+
+  .goal-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .goal-emoji { font-size: 26px; margin-bottom: 8px; display: block; }
+
+  .goal-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .goal-card-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .goal-deadline {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+
+  .goal-progress-section { }
+
+  .goal-pct-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .goal-pct-label { font-size: 12px; color: var(--text-secondary); }
+  .goal-pct-val { font-size: 13px; font-weight: 800; color: var(--blue-light); }
+
+  .goal-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(37,99,235,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .goal-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--blue-primary), var(--blue-light));
+    transition: width 1s ease;
+    position: relative;
+  }
+
+  .goal-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+  }
+
+  .goal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .goal-xp-reward {
+    font-size: 11px;
+    color: var(--blue-light);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .goal-category { }
+
+  /* ===== RANKING VIEW ===== */
+  .ranking-container { max-width: 700px; }
+
+  .ranking-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+    transition: all 0.15s ease;
+  }
+
+  .ranking-item:hover { border-color: var(--border-bright); }
+
+  .ranking-item.me {
+    border-color: rgba(37,99,235,0.4);
+    background: rgba(37,99,235,0.08);
+  }
+
+  .rank-position {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .rank-1 { background: linear-gradient(135deg, #F59E0B, #FCD34D); color: #000; }
+  .rank-2 { background: linear-gradient(135deg, #94A3B8, #E2E8F0); color: #000; }
+  .rank-3 { background: linear-gradient(135deg, #92400E, #D97706); color: white; }
+  .rank-other { background: var(--bg-panel); color: var(--text-secondary); border: 1px solid var(--border); font-size: 13px; }
+
+  .rank-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-deep), var(--blue-primary));
+    border: 2px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .rank-info { flex: 1; }
+  .rank-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .rank-level { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+  .rank-xp {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--blue-light);
+    text-align: right;
+  }
+
+  .rank-xp-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+
+  .modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-bright);
+    border-radius: 16px;
+    width: 480px;
+    max-width: 95vw;
+    padding: 28px;
+    box-shadow: 0 0 60px rgba(37,99,235,0.2);
+    transform: translateY(20px) scale(0.97);
+    transition: all 0.2s ease;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal-form { display: flex; flex-direction: column; gap: 14px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.15s;
+    outline: none;
+    width: 100%;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+
+  .form-select option { background: var(--bg-card); }
+  .form-textarea { resize: vertical; min-height: 70px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+
+  .btn-cancel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .btn-cancel:hover { border-color: var(--border-bright); color: var(--text-primary); }
+
+  .btn-save {
+    background: var(--blue-primary);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 9px 22px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+    box-shadow: 0 0 20px rgba(37,99,235,0.35);
+  }
+
+  .btn-save:hover { background: var(--blue-bright); box-shadow: 0 0 30px rgba(37,99,235,0.5); }
+
+  /* XP Toast */
+  .xp-toast {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    background: var(--bg-panel);
+    border: 1px solid rgba(37,99,235,0.5);
+    border-radius: 12px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 0 30px rgba(37,99,235,0.3);
+    z-index: 200;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .xp-toast.show { transform: translateX(0); }
+
+  .xp-toast-icon { font-size: 24px; }
+  .xp-toast-text { }
+  .xp-toast-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .xp-toast-sub { font-size: 12px; color: var(--blue-light); font-weight: 600; }
+
+  /* Level Up Toast */
+  .levelup-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: linear-gradient(135deg, var(--bg-panel), rgba(37,99,235,0.2));
+    border: 2px solid var(--blue-primary);
+    border-radius: 20px;
+    padding: 32px 40px;
+    text-align: center;
+    z-index: 300;
+    box-shadow: 0 0 80px rgba(37,99,235,0.6);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .levelup-toast.show { transform: translate(-50%, -50%) scale(1); }
+
+  .levelup-emoji { font-size: 48px; display: block; margin-bottom: 10px; }
+  .levelup-title { font-size: 28px; font-weight: 900; color: var(--text-primary); margin-bottom: 6px; letter-spacing: -0.5px; }
+  .levelup-sub { font-size: 15px; color: var(--blue-light); font-weight: 600; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state-icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-state-text { font-size: 14px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.3); border-radius: 4px; }
+
+  .separator { height: 1px; background: var(--border); margin: 6px 0; }
+
+  /* Delete btn */
+  .btn-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-delete:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+
+</style>
+</head>
+<body>
+
+<!-- XP Toast -->
+<div class="xp-toast" id="xpToast">
+  <div class="xp-toast-icon">⚡</div>
+  <div class="xp-toast-text">
+    <div class="xp-toast-title">Tarefa concluída!</div>
+    <div class="xp-toast-sub" id="xpToastSub">+50 XP ganhos</div>
+  </div>
+</div>
+
+<!-- Level Up Toast -->
+<div class="levelup-toast" id="levelupToast">
+  <span class="levelup-emoji">🎉</span>
+  <div class="levelup-title" id="levelupTitle">LEVEL UP!</div>
+  <div class="levelup-sub" id="levelupSub">Você alcançou o Nível 2!</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-title" id="modalTitle">➕ Nova Tarefa</div>
+    <div class="modal-form" id="modalForm">
+      <!-- dinâmico -->
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">⚔</div>
+      <span class="logo-text">LevelUp</span>
+    </div>
+  </div>
+
+  <div class="player-card">
+    <div class="player-avatar-row">
+      <div class="player-avatar">🧙</div>
+      <div class="player-info">
+        <div class="player-name" id="sidebarName">Aventureiro</div>
+        <div class="player-title" id="sidebarTitle">Aprendiz de Produtividade</div>
+      </div>
+      <div class="level-badge" id="sidebarLevel">Nv 1</div>
+    </div>
+    <div class="xp-bar-container">
+      <div class="xp-labels">
+        <span class="xp-label">XP</span>
+        <span class="xp-value" id="sidebarXP">0 / 200 XP</span>
+      </div>
+      <div class="xp-bar">
+        <svg width="0" height="0" style="position:absolute">
+          <defs>
+            <linearGradient id="xpGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#60A5FA"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="xp-fill" id="xpFill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-chip">
+      <div class="stat-chip-value" id="statsCompleted">0</div>
+      <div class="stat-chip-label">Feitas</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-value" id="statsStreak">0</div>
+      <div class="stat-chip-label">Streak</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-value" id="statsTotalXP">0</div>
+      <div class="stat-chip-label">XP Total</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Principal</div>
+    <div class="nav-item active" onclick="navigate('today', this)">
+      <span class="nav-icon">☀️</span> Hoje
+    </div>
+    <div class="nav-item" onclick="navigate('tasks', this)">
+      <span class="nav-icon">✅</span> Tarefas
+      <span class="nav-badge" id="navTaskBadge">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('goals', this)">
+      <span class="nav-icon">🎯</span> Metas
+    </div>
+
+    <div class="separator" style="margin: 10px 8px;"></div>
+    <div class="nav-section-title">Progresso</div>
+    <div class="nav-item" onclick="navigate('ranking', this)">
+      <span class="nav-icon">🏆</span> Ranking
+    </div>
+    <div class="nav-item" onclick="navigate('achievements', this)">
+      <span class="nav-icon">🎖️</span> Conquistas
+    </div>
+  </nav>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="page-title" id="pageTitle">Hoje</span>
+      <span class="date-chip" id="dateChip"></span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-add" onclick="openModal()">+ Adicionar</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- TODAY VIEW -->
+    <div class="view active" id="view-today">
+      <div class="today-grid">
+        <div>
+          <!-- Tarefas de Hoje -->
+          <div class="section-header">
+            <span class="section-title">📋 Tarefas de Hoje <span class="section-count" id="todayCount">0 tarefas</span></span>
+            <button class="btn-sm" onclick="openModal()">+ Nova Tarefa</button>
+          </div>
+          <div class="task-list" id="todayTaskList">
+            <div class="empty-state">
+              <div class="empty-state-icon">🌙</div>
+              <div class="empty-state-text">Nenhuma tarefa para hoje.<br>Adicione uma para começar!</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-col">
+          <!-- Resumo do Dia -->
+          <div class="summary-card">
+            <div class="summary-title">Resumo do Dia</div>
+            <div class="progress-circle-container">
+              <div class="circle-wrap">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <defs>
+                    <linearGradient id="circleGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#2563EB"/>
+                      <stop offset="100%" stop-color="#60A5FA"/>
+                    </linearGradient>
+                  </defs>
+                  <circle class="circle-bg" cx="32" cy="32" r="27"/>
+                  <circle class="circle-fill" id="circleProgress" cx="32" cy="32" r="27"
+                    stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+                </svg>
+                <span class="circle-label" id="circleLabel">0%</span>
+              </div>
+              <div class="progress-text">
+                <div class="progress-big" id="todayDoneCount">0/0</div>
+                <div class="progress-sub">tarefas concluídas hoje</div>
+              </div>
+            </div>
+            <div class="day-stats">
+              <div class="day-stat-row">
+                <span class="day-stat-label">XP ganho hoje</span>
+                <span class="day-stat-val blue" id="todayXP">0 XP</span>
+              </div>
+              <div class="day-stat-row">
+                <span class="day-stat-label">Nível atual</span>
+                <span class="day-stat-val" id="todayLevel">1</span>
+              </div>
+              <div class="day-stat-row">
+                <span class="day-stat-label">Tarefas pendentes</span>
+                <span class="day-stat-val" id="todayPending">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Streak -->
+          <div class="streak-card">
+            <div class="streak-icon">🔥</div>
+            <div class="streak-info">
+              <div class="streak-number" id="streakNum">0</div>
+              <div class="streak-label">Dias em sequência</div>
+            </div>
+          </div>
+
+          <!-- Metas -->
+          <div class="goal-mini">
+            <div class="section-header" style="margin-bottom:12px">
+              <span class="section-title" style="font-size:12px">🎯 Progresso das Metas</span>
+              <button class="btn-sm" onclick="navigate('goals', document.querySelector('.nav-item:nth-child(4)'))">Ver tudo</button>
+            </div>
+            <div class="goal-mini-row" id="miniGoalList">
+              <div style="font-size:12px; color: var(--text-muted); text-align:center; padding:10px 0;">
+                Nenhuma meta criada ainda.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS VIEW -->
+    <div class="view" id="view-tasks">
+      <div class="tabs">
+        <div class="tab active" onclick="filterTasks('all', this)">Todas</div>
+        <div class="tab" onclick="filterTasks('pending', this)">Pendentes</div>
+        <div class="tab" onclick="filterTasks('done', this)">Concluídas</div>
+      </div>
+      <div class="task-list" id="allTaskList">
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-text">Nenhuma tarefa ainda. Adicione uma!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOALS VIEW -->
+    <div class="view" id="view-goals">
+      <div class="section-header" style="margin-bottom:20px">
+        <span class="section-title">🎯 Minhas Metas</span>
+        <button class="btn-sm" onclick="openGoalModal()">+ Nova Meta</button>
+      </div>
+      <div class="goals-grid" id="goalsList">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-state-icon">🏁</div>
+          <div class="empty-state-text">Nenhuma meta ainda. Crie sua primeira!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RANKING VIEW -->
+    <div class="view" id="view-ranking">
+      <div class="ranking-container">
+        <div class="section-header" style="margin-bottom:20px">
+          <span class="section-title">🏆 Ranking Global</span>
+        </div>
+        <div id="rankingList"></div>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENTS VIEW -->
+    <div class="view" id="view-achievements">
+      <div class="section-header" style="margin-bottom:20px">
+        <span class="section-title">🎖️ Conquistas</span>
+      </div>
+      <div class="goals-grid" id="achievementsList"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ===== STATE =====
+let state = {
+  name: 'Aventureiro',
+  level: 1,
+  xp: 0,
+  xpThresholds: [0, 200, 450, 750, 1100, 1500, 2000, 2600, 3300, 4100, 5000],
+  totalXP: 0,
+  streak: 0,
+  completedTotal: 0,
+  todayXP: 0,
+  tasks: [],
+  goals: [],
+  currentFilter: 'all',
+};
+
+const TITLES = [
+  'Aprendiz de Produtividade',
+  'Iniciante Dedicado',
+  'Trabalhador Focado',
+  'Explorador de Metas',
+  'Mestre das Tarefas',
+  'Guerreiro da Rotina',
+  'Herói do Dia a Dia',
+  'Lenda Produtiva',
+  'Campeão Supremo',
+  'Deus da Produtividade',
+];
+
+const ACHIEVEMENTS_DEF = [
+  { id: 'first_task', icon: '🌱', name: 'Primeira Tarefa', desc: 'Complete sua primeira tarefa', req: (s) => s.completedTotal >= 1 },
+  { id: 'five_tasks', icon: '⭐', name: 'Iniciante', desc: 'Complete 5 tarefas', req: (s) => s.completedTotal >= 5 },
+  { id: 'ten_tasks', icon: '🔟', name: 'Determinado', desc: 'Complete 10 tarefas', req: (s) => s.completedTotal >= 10 },
+  { id: 'level5', icon: '🏅', name: 'Meio Caminho', desc: 'Alcance o nível 5', req: (s) => s.level >= 5 },
+  { id: 'level10', icon: '💎', name: 'Mestre', desc: 'Alcance o nível 10', req: (s) => s.level >= 10 },
+  { id: '500xp', icon: '⚡', name: 'Energizado', desc: 'Acumule 500 XP', req: (s) => s.totalXP >= 500 },
+  { id: '1000xp', icon: '🌟', name: 'Mil XP', desc: 'Acumule 1000 XP', req: (s) => s.totalXP >= 1000 },
+  { id: 'first_goal', icon: '🎯', name: 'Visionário', desc: 'Crie sua primeira meta', req: (s) => s.goals.length >= 1 },
+  { id: 'streak3', icon: '🔥', name: 'Em Chamas', desc: '3 dias de sequência', req: (s) => s.streak >= 3 },
+  { id: 'streak7', icon: '🌈', name: 'Semana Perfeita', desc: '7 dias de sequência', req: (s) => s.streak >= 7 },
+];
+
+// ===== INIT =====
+function init() {
+  const saved = localStorage.getItem('levelup_state');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    state = { ...state, ...parsed };
+    // Ensure xpThresholds is always the full array
+    state.xpThresholds = [0, 200, 450, 750, 1100, 1500, 2000, 2600, 3300, 4100, 5000];
+  }
+
+  // Set today's date
+  const now = new Date();
+  const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  document.getElementById('dateChip').textContent =
+    `${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()].charAt(0).toUpperCase() + meses[now.getMonth()].slice(1)}`;
+
+  renderAll();
+  populateRanking();
+  renderAchievements();
+}
+
+function save() {
+  localStorage.setItem('levelup_state', JSON.stringify(state));
+}
+
+// ===== XP & LEVEL =====
+function addXP(amount) {
+  state.xp += amount;
+  state.totalXP += amount;
+  state.todayXP += amount;
+  state.completedTotal += 1;
+
+  const oldLevel = state.level;
+  // Level up check
+  while (state.level < state.xpThresholds.length - 1 &&
+         state.xp >= state.xpThresholds[state.level]) {
+    state.xp -= state.xpThresholds[state.level];
+    state.level++;
+  }
+
+  if (state.level > oldLevel) {
+    showLevelUp(state.level);
+    state.streak = Math.max(state.streak, 0) + 1;
+  }
+
+  showXPToast(amount);
+  save();
+  renderAll();
+  renderAchievements();
+}
+
+function getXPForLevel(level) {
+  if (level < state.xpThresholds.length) return state.xpThresholds[level];
+  return state.xpThresholds[state.xpThresholds.length - 1];
+}
+
+function getXPPercent() {
+  const needed = getXPForLevel(state.level);
+  return Math.min(100, Math.round((state.xp / needed) * 100));
+}
+
+// ===== TOASTS =====
+function showXPToast(amount) {
+  const toast = document.getElementById('xpToast');
+  document.getElementById('xpToastSub').textContent = `+${amount} XP ganhos!`;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+function showLevelUp(level) {
+  const toast = document.getElementById('levelupToast');
+  document.getElementById('levelupTitle').textContent = '🚀 LEVEL UP!';
+  document.getElementById('levelupSub').textContent = `Você alcançou o Nível ${level}!`;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ===== NAVIGATION =====
+let currentView = 'today';
+
+function navigate(view, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  el.classList.add('active');
+  currentView = view;
+
+  const titles = { today: 'Hoje', tasks: 'Tarefas', goals: 'Metas', ranking: 'Ranking', achievements: 'Conquistas' };
+  document.getElementById('pageTitle').textContent = titles[view] || view;
+
+  if (view === 'ranking') populateRanking();
+  if (view === 'achievements') renderAchievements();
+}
+
+// ===== RENDER =====
+function renderAll() {
+  renderSidebar();
+  renderTodayView();
+  renderTasksView();
+  renderGoalsView();
+}
+
+function renderSidebar() {
+  const pct = getXPPercent();
+  const needed = getXPForLevel(state.level);
+  const title = TITLES[Math.min(state.level - 1, TITLES.length - 1)];
+
+  document.getElementById('sidebarName').textContent = state.name;
+  document.getElementById('sidebarTitle').textContent = title;
+  document.getElementById('sidebarLevel').textContent = `Nv ${state.level}`;
+  document.getElementById('sidebarXP').textContent = `${state.xp} / ${needed} XP`;
+  document.getElementById('xpFill').style.width = pct + '%';
+
+  document.getElementById('statsCompleted').textContent = state.completedTotal;
+  document.getElementById('statsStreak').textContent = state.streak;
+  document.getElementById('statsTotalXP').textContent = state.totalXP;
+
+  const pending = state.tasks.filter(t => !t.done).length;
+  document.getElementById('navTaskBadge').textContent = pending;
+}
+
+function renderTodayView() {
+  const today = getTodayStr();
+  const todayTasks = state.tasks.filter(t => t.date === today);
+  const doneTasks = todayTasks.filter(t => t.done);
+
+  document.getElementById('todayCount').textContent = todayTasks.length + ' tarefa' + (todayTasks.length !== 1 ? 's' : '');
+  document.getElementById('todayDoneCount').textContent = `${doneTasks.length}/${todayTasks.length}`;
+  document.getElementById('todayXP').textContent = state.todayXP + ' XP';
+  document.getElementById('todayLevel').textContent = state.level;
+  document.getElementById('todayPending').textContent = todayTasks.filter(t => !t.done).length;
+  document.getElementById('streakNum').textContent = state.streak;
+
+  // Circle progress
+  const pct = todayTasks.length ? (doneTasks.length / todayTasks.length) : 0;
+  const circumference = 169.6;
+  const offset = circumference * (1 - pct);
+  document.getElementById('circleProgress').style.strokeDashoffset = offset;
+  document.getElementById('circleLabel').textContent = Math.round(pct * 100) + '%';
+
+  // Tasks
+  const list = document.getElementById('todayTaskList');
+  if (todayTasks.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌙</div><div class="empty-state-text">Nenhuma tarefa para hoje.<br>Adicione uma para começar!</div></div>`;
+    return;
+  }
+  list.innerHTML = todayTasks.map(t => taskCardHTML(t)).join('');
+
+  // Mini goals
+  renderMiniGoals();
+}
+
+function renderTasksView() {
+  const list = document.getElementById('allTaskList');
+  let tasks = [...state.tasks];
+
+  if (state.currentFilter === 'pending') tasks = tasks.filter(t => !t.done);
+  if (state.currentFilter === 'done') tasks = tasks.filter(t => t.done);
+
+  if (tasks.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">Nenhuma tarefa aqui ainda.</div></div>`;
+    return;
+  }
+  list.innerHTML = tasks.map(t => taskCardHTML(t, true)).join('');
+}
+
+function renderGoalsView() {
+  const container = document.getElementById('goalsList');
+  if (state.goals.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🏁</div><div class="empty-state-text">Nenhuma meta ainda. Crie sua primeira!</div></div>`;
+    return;
+  }
+  container.innerHTML = state.goals.map(g => goalCardHTML(g)).join('');
+}
+
+function renderMiniGoals() {
+  const container = document.getElementById('miniGoalList');
+  if (state.goals.length === 0) {
+    container.innerHTML = `<div style="font-size:12px; color: var(--text-muted); text-align:center; padding:10px 0;">Nenhuma meta criada ainda.</div>`;
+    return;
+  }
+  const fills = ['fill-blue', 'fill-green', 'fill-purple'];
+  container.innerHTML = state.goals.slice(0, 3).map((g, i) => `
+    <div class="goal-item">
+      <div class="goal-item-header">
+        <span class="goal-item-name">${g.emoji} ${g.name}</span>
+        <span class="goal-item-pct">${g.progress}%</span>
+      </div>
+      <div class="mini-bar"><div class="mini-bar-fill ${fills[i % fills.length]}" style="width:${g.progress}%"></div></div>
+    </div>
+  `).join('');
+}
+
+function renderAchievements() {
+  const container = document.getElementById('achievementsList');
+  container.innerHTML = ACHIEVEMENTS_DEF.map(a => {
+    const unlocked = a.req(state);
+    return `
+      <div class="goal-card" style="${unlocked ? '' : 'opacity:0.45; filter:grayscale(1)'}">
+        <span class="goal-emoji">${a.icon}</span>
+        <div class="goal-card-title">${a.name}</div>
+        <div class="goal-card-desc">${a.desc}</div>
+        <div style="margin-top:12px; font-size:12px; font-weight:700; color:${unlocked ? 'var(--success)' : 'var(--text-muted)'}">
+          ${unlocked ? '✅ Desbloqueada!' : '🔒 Bloqueada'}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function taskCardHTML(task, showDate = false) {
+  const tagClass = { Trabalho: 'tag-work', Pessoal: 'tag-personal', Saúde: 'tag-health', Estudo: 'tag-study' }[task.category] || 'tag-work';
+  const prioClass = { Alta: 'priority-high', Média: 'priority-medium', Baixa: 'priority-low' }[task.priority] || 'priority-medium';
+  return `
+    <div class="task-card ${prioClass} ${task.done ? 'done' : ''}" id="task-${task.id}">
+      <div class="task-check ${task.done ? 'checked' : ''}" onclick="toggleTask('${task.id}')"></div>
+      <div class="task-content">
+        <div class="task-title">${task.title}</div>
+        <div class="task-meta">
+          <span class="task-tag ${tagClass}">${task.category}</span>
+          ${showDate ? `<span class="task-time">📅 ${task.date || 'Sem data'}</span>` : ''}
+          <span class="task-time">⚡ ${task.priority}</span>
+        </div>
+      </div>
+      <span class="task-xp">+${task.xp} XP</span>
+      <button class="btn-delete" onclick="deleteTask('${task.id}')">✕</button>
+    </div>
+  `;
+}
+
+function goalCardHTML(goal) {
+  return `
+    <div class="goal-card">
+      <span class="goal-emoji">${goal.emoji}</span>
+      <div class="goal-card-title">${goal.name}</div>
+      <div class="goal-card-desc">${goal.description || ''}</div>
+      ${goal.deadline ? `<div class="goal-deadline">📅 Prazo: ${goal.deadline}</div>` : ''}
+      <div class="goal-progress-section">
+        <div class="goal-pct-row">
+          <span class="goal-pct-label">Progresso</span>
+          <span class="goal-pct-val">${goal.progress}%</span>
+        </div>
+        <div class="goal-bar"><div class="goal-bar-fill" style="width:${goal.progress}%"></div></div>
+      </div>
+      <div class="goal-footer">
+        <div style="display:flex; align-items:center; gap:8px">
+          <input type="range" min="0" max="100" value="${goal.progress}" style="width:100px; accent-color: var(--blue-primary);"
+            oninput="updateGoalProgress('${goal.id}', this.value)">
+          <span class="goal-pct-val" id="gp-${goal.id}">${goal.progress}%</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="goal-xp-reward">⚡ ${goal.xpReward} XP ao completar</span>
+          <button class="btn-delete" onclick="deleteGoal('${goal.id}')">✕</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== ACTIONS =====
+function toggleTask(id) {
+  const task = state.tasks.find(t => t.id === id);
+  if (!task) return;
+  if (!task.done) {
+    task.done = true;
+    addXP(task.xp);
+  } else {
+    task.done = false;
+    state.xp -= task.xp;
+    state.totalXP -= task.xp;
+    state.todayXP -= task.xp;
+    state.completedTotal = Math.max(0, state.completedTotal - 1);
+    if (state.xp < 0) state.xp = 0;
+    save();
+    renderAll();
+  }
+}
+
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  save();
+  renderAll();
+}
+
+function deleteGoal(id) {
+  state.goals = state.goals.filter(g => g.id !== id);
+  save();
+  renderAll();
+}
+
+function filterTasks(f, el) {
+  state.currentFilter = f;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderTasksView();
+}
+
+function updateGoalProgress(id, val) {
+  const goal = state.goals.find(g => g.id === id);
+  if (!goal) return;
+  const old = goal.progress;
+  goal.progress = parseInt(val);
+  const el = document.getElementById('gp-' + id);
+  if (el) el.textContent = val + '%';
+  if (old < 100 && goal.progress >= 100) {
+    addXP(goal.xpReward);
+  }
+  save();
+  renderMiniGoals();
+}
+
+// ===== MODAL =====
+let modalMode = 'task';
+
+function openModal() {
+  modalMode = 'task';
+  document.getElementById('modalTitle').textContent = '➕ Nova Tarefa';
+  const today = getTodayStr();
+  document.getElementById('modalForm').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Título da Tarefa *</label>
+      <input class="form-input" id="inputTitle" placeholder="Ex: Revisar relatório..." maxlength="80">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="inputCategory">
+          <option>Trabalho</option>
+          <option>Pessoal</option>
+          <option>Saúde</option>
+          <option>Estudo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prioridade</label>
+        <select class="form-select" id="inputPriority">
+          <option>Baixa</option>
+          <option selected>Média</option>
+          <option>Alta</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input class="form-input" type="date" id="inputDate" value="${today}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">XP ao Concluir</label>
+        <select class="form-select" id="inputXP">
+          <option value="25">25 XP (Fácil)</option>
+          <option value="50" selected>50 XP (Normal)</option>
+          <option value="100">100 XP (Difícil)</option>
+          <option value="150">150 XP (Épico)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveTask()">Adicionar Tarefa</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('inputTitle').focus();
+}
+
+function openGoalModal() {
+  modalMode = 'goal';
+  document.getElementById('modalTitle').textContent = '🎯 Nova Meta';
+  document.getElementById('modalForm').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Nome da Meta *</label>
+      <input class="form-input" id="inputGoalName" placeholder="Ex: Correr 5km toda semana...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-textarea" id="inputGoalDesc" placeholder="Descreva sua meta..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Emoji</label>
+        <input class="form-input" id="inputGoalEmoji" placeholder="🎯" maxlength="2" value="🎯">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prazo</label>
+        <input class="form-input" type="date" id="inputGoalDeadline">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">XP de Recompensa ao Completar</label>
+      <select class="form-select" id="inputGoalXP">
+        <option value="100">100 XP</option>
+        <option value="200" selected>200 XP</option>
+        <option value="350">350 XP</option>
+        <option value="500">500 XP</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveGoal()">Criar Meta</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function saveTask() {
+  const title = document.getElementById('inputTitle').value.trim();
+  if (!title) { document.getElementById('inputTitle').style.borderColor = 'var(--danger)'; return; }
+
+  const task = {
+    id: Date.now().toString(),
+    title,
+    category: document.getElementById('inputCategory').value,
+    priority: document.getElementById('inputPriority').value,
+    date: document.getElementById('inputDate').value,
+    xp: parseInt(document.getElementById('inputXP').value),
+    done: false,
+    createdAt: new Date().toISOString(),
+  };
+
+  state.tasks.unshift(task);
+  save();
+  closeModal();
+  renderAll();
+}
+
+function saveGoal() {
+  const name = document.getElementById('inputGoalName').value.trim();
+  if (!name) { document.getElementById('inputGoalName').style.borderColor = 'var(--danger)'; return; }
+
+  const goal = {
+    id: Date.now().toString(),
+    name,
+    description: document.getElementById('inputGoalDesc').value.trim(),
+    emoji: document.getElementById('inputGoalEmoji').value || '🎯',
+    deadline: document.getElementById('inputGoalDeadline').value,
+    xpReward: parseInt(document.getElementById('inputGoalXP').value),
+    progress: 0,
+    createdAt: new Date().toISOString(),
+  };
+
+  state.goals.unshift(goal);
+  save();
+  closeModal();
+  renderAll();
+  renderAchievements();
+}
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ===== RANKING =====
+function populateRanking() {
+  const fakeUsers = [
+    { name: 'Ana Beatriz', emoji: '👩‍💻', level: 8, totalXP: 2400 },
+    { name: 'Carlos M.', emoji: '🧑‍🎓', level: 7, totalXP: 1950 },
+    { name: 'Fernanda L.', emoji: '👩‍🔬', level: 6, totalXP: 1600 },
+    { name: 'Rafael S.', emoji: '🧑‍💼', level: 4, totalXP: 890 },
+    { name: 'Juliana P.', emoji: '👩‍🎨', level: 3, totalXP: 620 },
+  ];
+
+  const allUsers = [
+    { name: state.name, emoji: '🧙', level: state.level, totalXP: state.totalXP, isMe: true },
+    ...fakeUsers
+  ].sort((a, b) => b.totalXP - a.totalXP);
+
+  const rankClasses = ['rank-1', 'rank-2', 'rank-3', 'rank-other', 'rank-other', 'rank-other'];
+  const medals = ['🥇', '🥈', '🥉'];
+
+  document.getElementById('rankingList').innerHTML = allUsers.map((u, i) => `
+    <div class="ranking-item ${u.isMe ? 'me' : ''}">
+      <div class="rank-position ${rankClasses[i] || 'rank-other'}">${i < 3 ? medals[i] : (i + 1)}</div>
+      <div class="rank-avatar">${u.emoji}</div>
+      <div class="rank-info">
+        <div class="rank-name">${u.name} ${u.isMe ? '<span style="font-size:10px; color:var(--blue-light)">(você)</span>' : ''}</div>
+        <div class="rank-level">Nível ${u.level} · ${TITLES[Math.min(u.level - 1, TITLES.length - 1)]}</div>
+      </div>
+      <div>
+        <div class="rank-xp">${u.totalXP}</div>
+        <div class="rank-xp-label">XP Total</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== UTILS =====
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
